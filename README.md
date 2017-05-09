@@ -1,2 +1,9 @@
-# game
-erlang game
+game
+=====
+
+An OTP application
+
+Build
+-----
+
+    $ rebar3 compile

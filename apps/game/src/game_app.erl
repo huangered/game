@@ -15,6 +15,7 @@
 %%====================================================================
 
 start(_StartType, _StartArgs) ->
+	ok = application:start(ranch),
     {ok, _} = ranch:start_listener(tcp_echo, 1, ranch_tcp, [{port, 5555}], echo_protocol, []),
     game_sup:start_link().
 

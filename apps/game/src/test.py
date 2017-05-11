@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import socket
 import struct
-
+import json
 def send(s, message):
 	length = len(message)
         # network (= big-endian)
@@ -17,8 +17,9 @@ def pack(method, raw):
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.connect(("localhost", 5555))
-send(s, pack("t","test"))
-send(s, pack("ggg","abcdefghijklmn"))
+
+send(s, pack("t",json.dumps({'user':'abcd'})))
+send(s, pack("ggg",json.dumps(["abcdefghijklmn"])))
 data = s.recv(1024)
 print data
 s.close()

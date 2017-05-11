@@ -20,7 +20,9 @@ loop(Socket, Transport) ->
 	    {ok, Data } = Transport:recv(Socket, Len, infinity), 
 	    io:format("Recv dat ~p~n", [binary_to_list(Data)]),
 	    {M, D} = unpack(Data),
-	    io:format("M ~p, D ~p ~n", [M, D]),           
+	    io:format("M ~p, D ~p ~n", [M, D]),      
+	    Json = jiffy:decode(D, [return_maps]),
+	    io:format("Json ~p~n",[Json]),
 	    Transport:send(Socket, Data),
 	    loop(Socket, Transport);
 	_ ->

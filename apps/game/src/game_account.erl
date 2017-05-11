@@ -8,7 +8,9 @@
 -behaviour(gen_server).
 
 -export([start_link/0,
-        add/1]).
+         login/2,
+         logout/1,
+         add/1]).
 
 %% gen_server callbacks
 -export([init/1,
@@ -26,13 +28,26 @@ start_link() ->
 add(User) ->
     gen_server:call(?MODULE, {add, User}).
 
+login(User, Password) ->
+    gen_server:call(?MODULE, {login, User, Password}).
+
+logout(User) ->
+    gen_server:call(?MODULE, {logout, User}).
+
 init([]) ->
     {ok, #state{}}.
 
 handle_call({add, User}, _From, State) ->
     io:format("Add user: ~p~n", [User]),         
-    {reply, ignored, State}.
+    {reply, ignored, State};
 
+handle_call({login, User, Password}, _From, State) ->
+    io:format("Login~n",[]),
+    {reply, ignored, State};
+
+handle_call({logout, User}, _From, State) ->
+    io:format("Logout~n", []),
+    {reply, ignored, State}.
 
 handle_cast(_Msg, State) ->
     {noreply, State}.

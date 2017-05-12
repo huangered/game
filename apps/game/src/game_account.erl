@@ -20,7 +20,7 @@
          terminate/2,
          code_change/3]).
 
--record(state, {}).
+-record(state, {users}).
 
 start_link() ->
     gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
@@ -35,17 +35,24 @@ logout(User) ->
     gen_server:call(?MODULE, {logout, User}).
 
 init([]) ->
-    {ok, #state{}}.
+    {ok, #state{users=dict:new()}}.
 
-handle_call({add, User}, _From, State) ->
-    io:format("Add user: ~p~n", [User]),         
-    {reply, ignored, State};
+handle_call({add, User}, _From, State=#state{users=Users}) ->
+    io:format("Add user: ~p~n", [User]),
+    UsersN=dict:store(User, User, Users),
+    {reply, ignored, #state{users=UsersN}};
 %%
 %% @return {ok, UserId} | {error, Reason}
 %%
-handle_call({login, User, Password}, _From, State) ->
+handle_call({login, User, Password}, _From, State=#state{users=Users}) ->
     io:format("Login~n",[]),
-    {reply, {ok, 1}, State};
+    case dict:find(User, Users) of
+        {ok, Msgs} ->
+            io:format("Find user ~p~n", [Msgs]),
+            {reply, {ok, Msgs}, State};
+        error -> 
+            {reply, {error, "not found"}, State}
+    end;
 
 handle_call({logout, User}, _From, State) ->
     io:format("Logout~n", []),

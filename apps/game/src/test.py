@@ -18,8 +18,7 @@ def pack(method, raw):
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.connect(("localhost", 5555))
 
-send(s, pack("t",json.dumps({'user':'abcd'})))
-send(s, pack("ggg",json.dumps(["abcdefghijklmn"])))
+send(s, pack("auth",json.dumps({'user':'abcd', 'password':"abcd"})))
 data = s.recv(1024)
 print data
 s.close()

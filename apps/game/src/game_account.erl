@@ -1,7 +1,7 @@
 %% -*- erlang-indent-level: 4;indent-tabs-mode: nil -*-
 %% ex: ts=4 sw=4 et
-%% @author Kevin Smith <kevin@opscode.com>
-%% @copyright 2011 Opscode, Inc.
+%% @author huang yi <huangered@hotmail.com>
+%% @copyright 2017
 
 -module(game_account).
 

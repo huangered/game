@@ -28,7 +28,10 @@ start_link() ->
 
 %% Child :: {Id,StartFunc,Restart,Shutdown,Type,Modules}
 init([]) ->
-    {ok, { {one_for_all, 0, 1}, []} }.
+    Account = {game_account, {game_account, start_link, []},
+               permanent, brutal_kill, worker, [game_account]},    
+    {ok, { {one_for_all, 0, 1}, [Account]} }.
+
 
 %%====================================================================
 %% Internal functions

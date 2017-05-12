@@ -23,11 +23,11 @@ loop(Socket, Transport, Profile) ->
 	    {M, D} = unpack(Data),
 	    {Method, DataMap} = unpack_raw(M, D),
 	    io:format("Method ~p, Data ~p~n",[Method, DataMap]),
-	    case control(Method, DataMap) of
-		ok -> 
+	    case auth(Method, DataMap) of
+		{ok, UserId} -> 
 		    io:format("auth success~n",[]),
-		    Profile1=maps:put(auth, true, Profile);
-		error ->
+		    Profile1 = Profile#{auth=>true, userId=>UserId};
+		{error, Reason} ->
 		    io:format("auth fail~n",[]),
 		    Profile1=maps:put(auth, false, Profile)
 	    end,
@@ -38,10 +38,16 @@ loop(Socket, Transport, Profile) ->
     end.
 
 %% auth
-control(auth, DataMap) ->
-    User = binary_to_list(maps:get( <<"user">>, DataMap)),
-    Password = binary_to_list(maps:get( <<"password">>, DataMap )),
-    ok.
+auth(Method, DataMap) ->
+    case Method of
+	auth ->
+	    User = binary_to_list(maps:get( <<"user">>, DataMap)),
+	    Password = binary_to_list(maps:get( <<"password">>, DataMap )),
+	    game_account:login(User, Password);
+	_ ->
+	    io:format("Method ~p not support now~n", [Method]),
+	    {error, "Method not support"}
+    end.
 
 unpack_raw(Method, Data) ->
     M = list_to_atom(binary_to_list(Method)),

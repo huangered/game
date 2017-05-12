@@ -40,10 +40,12 @@ init([]) ->
 handle_call({add, User}, _From, State) ->
     io:format("Add user: ~p~n", [User]),         
     {reply, ignored, State};
-
+%%
+%% @return {ok, UserId} | {error, Reason}
+%%
 handle_call({login, User, Password}, _From, State) ->
     io:format("Login~n",[]),
-    {reply, ignored, State};
+    {reply, {ok, 1}, State};
 
 handle_call({logout, User}, _From, State) ->
     io:format("Logout~n", []),

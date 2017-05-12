@@ -15,27 +15,35 @@ init(Ref, Socket, Transport, _Opts = []) ->
 %% loop
 loop(Socket, Transport, Profile) ->
     io:format("Socket ~p, Profile ~p~n",[Socket, Profile]),
-    case Transport:recv(Socket, 2, infinity) of
-        {ok, <<Len:16>>} ->
-	    io:format("Recv len ~p~n", [Len]),
-	    {ok, Data } = Transport:recv(Socket, Len, infinity), 
-	    io:format("Recv dat ~p~n", [binary_to_list(Data)]),
-	    {M, D} = unpack(Data),
-	    {Method, DataMap} = unpack_raw(M, D),
-	    io:format("Method ~p, Data ~p~n",[Method, DataMap]),
+    case receive_line(Socket, Transport) of
+	{ok, Method, DataMap} ->
 	    case auth(Method, DataMap) of
 		{ok, UserId} -> 
 		    io:format("auth success~n",[]),
-		    Profile1 = Profile#{auth=>true, userId=>UserId};
+		    Profile1 = Profile#{auth=>true, userId=>UserId},
+		    io:format("Enter game loop~n", []),
+		    game_loop(Socket, Transport, Profile1);
 		{error, Reason} ->
 		    io:format("auth fail~n",[]),
-		    Profile1=maps:put(auth, false, Profile)
-	    end,
-	    Transport:send(Socket, Data),
-	    loop(Socket, Transport, Profile1);
-	_ ->
-	    ok = Transport:close(Socket)
+		    Profile1=maps:put(auth, false, Profile),
+		    loop(Socket, Transport, Profile1)
+	    end;
+	{error} ->
+	    Transport:send(Socket, "error")
     end.
+%%
+%% game_loop
+%% 
+game_loop(Socket, Transport, Profile) ->
+    case receive_line(Socket, Transport) of
+	{ok, Method, DataMap} ->
+	    io:format("send echo~n",[]),
+	    Transport:send(Socket, "echo~n");
+	{error} ->
+	    Transport:close(Socket)
+	    %%io:format("error",[])
+    end,
+    game_loop(Socket, Transport, Profile).
 
 %% auth
 auth(Method, DataMap) ->
@@ -48,6 +56,30 @@ auth(Method, DataMap) ->
 	    io:format("Method ~p not support now~n", [Method]),
 	    {error, "Method not support"}
     end.
+
+%%
+%% receive line
+%%
+receive_line(Socket, Transport) ->
+    case Transport:recv(Socket, 2, infinity) of
+        {ok, <<Len:16>>} ->
+	    io:format("Recv len ~p~n", [Len]),
+	    case Transport:recv(Socket, Len, infinity) of
+		{ok, Data}->
+		    io:format("Recv dat ~p~n", [binary_to_list(Data)]),
+		    {M, D} = unpack(Data),
+		    {Method, DataMap} = unpack_raw(M, D),
+		    io:format("Method ~p, Data ~p~n",[Method, DataMap]),
+		    {ok, Method, DataMap};
+		_ ->
+		    Transport:close(Socket),
+		    {error}
+	    end;
+	_ ->
+	    Transport:close(Socket),
+	    {error}
+    end.
+
 
 unpack_raw(Method, Data) ->
     M = list_to_atom(binary_to_list(Method)),

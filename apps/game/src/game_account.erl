@@ -35,7 +35,8 @@ logout(User) ->
     gen_server:call(?MODULE, {logout, User}).
 
 init([]) ->
-    {ok, #state{users=dict:new()}}.
+    Users = dict:store("abcd","abcd",dict:new()),
+    {ok, #state{users=Users}}.
 
 handle_call({add, User}, _From, State=#state{users=Users}) ->
     io:format("Add user: ~p~n", [User]),

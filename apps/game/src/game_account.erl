@@ -4,7 +4,6 @@
 %% @copyright 2017
 
 -module(game_account).
-
 -behaviour(gen_server).
 
 -export([start_link/0,

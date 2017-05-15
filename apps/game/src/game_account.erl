@@ -45,6 +45,10 @@ handle_call({add, User}, _From, State=#state{users=Users}) ->
 %% @return {ok, UserId} | {error, Reason}
 %%
 handle_call({login, User, Password}, _From, State=#state{users=Users}) ->
+    Conn=open(),
+    Res = epgsql:equery(Conn, "select count(*) from users where username=$1 and password=$2", [ User, Password]),
+    close(Conn),
+    io:format("DB:~p~n", [Res]),
     io:format("Login~n",[]),
     case dict:find(User, Users) of
         {ok, Msgs} ->
@@ -71,3 +75,13 @@ code_change(_OldVsn, State, _Extra) ->
     {ok, State}.
 
 %% Internal functions
+open() ->
+    {ok, Conn}=epgsql:connect("localhost", "huangered", "1234",
+                              [
+                               { database,"huangered",
+                                 timeout, 5000
+                               }]),
+    Conn.
+
+close(Conn) ->
+   ok = epgsql:close(Conn).

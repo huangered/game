@@ -36,6 +36,8 @@ loop(Socket, Transport, Profile) ->
 %% 
 game_loop(Socket, Transport, Profile) ->
     case receive_line(Socket, Transport) of
+    {ok, heartbeat, _} ->
+        io:format("Hearbeat", []);
 	{ok, Method, DataMap} ->
 	    io:format("send echo~n",[]),
 	    Transport:send(Socket, "echo~n");

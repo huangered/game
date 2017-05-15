@@ -19,8 +19,8 @@ s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.connect(("localhost", 5555))
 
 send(s, pack("auth",json.dumps({'user':'abcd', 'password':"abcd"})))
-send(s, pack("gg",json.dumps({'a':'b'})))
-send(s, pack("gg",json.dumps({'a':'b'})))
+send(s, pack("move",json.dumps({'x':100})))
+send(s, pack("move",json.dumps({'x':100})))
 
 data = s.recv(1024)
 print data

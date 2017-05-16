@@ -45,16 +45,14 @@ handle_call({add, User}, _From, State=#state{users=Users}) ->
 %% @return {ok, UserId} | {error, Reason}
 %%
 handle_call({login, User, Password}, _From, State=#state{users=Users}) ->
-    Conn=open(),
-    Res = epgsql:equery(Conn, "select count(*) from users where username=$1 and password=$2", [ User, Password]),
+    Conn = open(),
+    {ok, _, Res} = epgsql:equery(Conn, "select * from users where username=$1 and password=$2", [ User, Password]),
     close(Conn),
     io:format("DB:~p~n", [Res]),
-    io:format("Login~n",[]),
-    case dict:find(User, Users) of
-        {ok, Msgs} ->
-            io:format("Find user ~p~n", [Msgs]),
-            {reply, {ok, Msgs}, State};
-        error -> 
+    case Res of 
+        [{ID, _, _}] -> 
+            {reply, {ok, ID}, State};
+        [] -> 
             {reply, {error, "not found"}, State}
     end;
 
@@ -76,7 +74,7 @@ code_change(_OldVsn, State, _Extra) ->
 
 %% Internal functions
 open() ->
-    {ok, Conn}=epgsql:connect("localhost", "huangered", "1234",
+    {ok, Conn}=epgsql:connect("localhost", "huangered", "",
                               [
                                { database,"huangered",
                                  timeout, 5000
@@ -85,3 +83,7 @@ open() ->
 
 close(Conn) ->
    ok = epgsql:close(Conn).
+
+%% new player pid
+new_player() ->
+    {ok, Pid } = superviosr:start_child(game_player_sup, []).

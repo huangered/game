@@ -3,7 +3,7 @@
 %% @end
 %%%-------------------------------------------------------------------
 
--module(game_sup).
+-module(game_world_sup).
 
 -behaviour(supervisor).
 
@@ -28,13 +28,9 @@ start_link() ->
 
 %% Child :: {Id,StartFunc,Restart,Shutdown,Type,Modules}
 init([]) ->
-    Account = {game_account, {game_account, start_link, []},
-               permanent, brutal_kill, worker, [game_account]},    
-    Player_sup = {game_player_sup, {game_player_sup, start_link, []},
-		  permanent, brutal_kill, supervisor, [game_player_sup]},
-	World_sup = {game_world_sup, {game_world_sup, start_link, []},
-		  permanent, brutal_kill, supervisor, [game_world_sup]},	  
-    {ok, { {one_for_all, 0, 1}, [Account, Player_sup, World_sup]} }.
+    World = {game_world, {game_world, start_link, []},
+               permanent, brutal_kill, worker, [game_world]},    
+    {ok, { {simple_one_for_one, 0, 1}, [World]} }.
 
 
 %%====================================================================

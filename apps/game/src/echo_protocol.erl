@@ -19,12 +19,12 @@ loop(Socket, Transport, Profile) ->
 	{ok, Method, DataMap} ->
 	    case auth(Method, DataMap) of
 		{ok, UserId} -> 
-		    io:format("auth success~n",[]),
+		    error_logger:info_msg("Auth success, User id ~p~n",[UserId]),
 		    Profile1 = Profile#{auth=>true, userId=>UserId},
-		    io:format("Enter game loop~n", []),
+		    error_logger:info_msg("Enter game loop, User id ~p~n", [UserId]),
 		    game_loop(Socket, Transport, Profile1);
 		{error, Reason} ->
-		    io:format("auth fail~n",[]),
+		    error_logger:info_msg("auth fail~n",[]),
 		    Profile1=maps:put(auth, false, Profile),
 		    loop(Socket, Transport, Profile1)
 	    end;

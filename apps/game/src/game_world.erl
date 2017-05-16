@@ -3,7 +3,7 @@
 %% @author huang yi <huangered@hotmail.com>
 %% @copyright 2017
 
--module(game_player).
+-module(game_world).
 
 -behaviour(gen_server).
 
@@ -17,27 +17,17 @@
          terminate/2,
          code_change/3]).
 
--export ([action/4]).
-
 -record(state, {players}).
 
 start_link() ->
     gen_server:start_link(?MODULE, [], []).
 
-action(M, User, Action, Data) ->
-    gen_server:call(M, {User, Action, Data}).
-
 init([]) ->
-    io:format("player init~n", []),
+    io:format("world init~n", []),
     {ok, #state{ players = dict:new() }}.
 
-handle_call({User, Action, Data}, _From, State) ->
-	case Action of
-		move -> io:format("move", []);
-		attack -> io:format("attack", []);
-		_ -> io:format("no support", [])
-	end,
-    {reply, ignored, State}.
+handle_call(_Request, _From, State) ->
+	{reply, ignored, State}.
 
 handle_cast(_Msg, State) ->
     {noreply, State}.
@@ -52,9 +42,3 @@ code_change(_OldVsn, State, _Extra) ->
     {ok, State}.
 
 %% Internal functions
-
-move(Player) ->
-    error_logger:info_msg("Move").
-
-attack(Player) ->
-    error_logger:info_msg("Attack").

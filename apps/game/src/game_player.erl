@@ -25,9 +25,10 @@ start_link() ->
     gen_server:start_link(?MODULE, [], []).
 
 action(M, User, Action, Data) ->
-	gen_server:call(M, {User, Action, Data}).
+    gen_server:call(M, {User, Action, Data}).
 
 init([]) ->
+    io:format("player init~n", []),
     {ok, #state{ players = dict:new() }}.
 
 handle_call({User, Action, Data}, _From, State) ->

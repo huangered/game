@@ -83,3 +83,7 @@ open() ->
 
 close(Conn) ->
    ok = epgsql:close(Conn).
+
+%% new player pid
+new_player() ->
+    {ok, Pid } = superviosr:start_child(game_player_sup, []).

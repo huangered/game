@@ -21,7 +21,7 @@ s.connect(("localhost", 5555))
 send(s, pack("auth",json.dumps({'user':'abcd', 'password':"abcd"})))
 send(s, pack("move",json.dumps({'x':100})))
 send(s, pack("move",json.dumps({'x':100})))
-
+send(s, pack("logout", json.dumps({})))
 data = s.recv(1024)
 print data
 s.close()

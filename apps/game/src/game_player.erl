@@ -51,3 +51,11 @@ code_change(_OldVsn, State, _Extra) ->
     {ok, State}.
 
 %% Internal functions
+
+move(Player) ->
+    error_logger:info_msg("Move").
+
+attack(Player) ->
+    error_logger:info_msg("Attack").
+
+    

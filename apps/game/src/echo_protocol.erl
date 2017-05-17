@@ -52,8 +52,8 @@ game_loop(Socket, Transport, Profile) ->
 auth(Method, DataMap) ->
     case Method of
 	auth ->
-	    User = binary_to_list(maps:get( <<"user">>, DataMap)),
-	    Password = binary_to_list(maps:get( <<"password">>, DataMap )),
+	    User = maps:get( "user", DataMap),
+	    Password = maps:get( "password", DataMap ),
 	    game_account:login(User, Password);
 	_ ->
 	    io:format("Method ~p not support now~n", [Method]),
@@ -83,11 +83,22 @@ receive_line(Socket, Transport) ->
 	    {error}
     end.
 
+helper1({K1, K2}) ->
+    case is_binary(K2) of
+	true -> {binary_to_list(K1), binary_to_list(K2)};
+	false -> {binary_to_list(K1), K2}
+    end.
+ 	    
+change(M) ->
+    DataList = maps:to_list(M),
+    io:format("Debug:~p~n", [DataList]),
+    ChangeList = lists:map(fun helper1/1, DataList),
+    maps:from_list(ChangeList).
 
 unpack_raw(Method, Data) ->
     M = list_to_atom(binary_to_list(Method)),
     Json = jiffy:decode(Data, [return_maps]),
-    {M, Json}.    
+    {M, change(Json)}.    
 
 %% pack & unpack
 pack(Method, Data) ->

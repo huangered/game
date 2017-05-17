@@ -20,8 +20,9 @@ loop(Socket, Transport, Profile) ->
 	    case auth(Method, DataMap) of
 		{ok, UserId} -> 
 		    error_logger:info_msg("Auth success, User id ~p~n",[UserId]),
-		    Profile1 = Profile#{auth=>true, userId=>UserId},
-		    error_logger:info_msg("Enter game loop, User id ~p~n", [UserId]),
+            Player_pid = game_player_sup:new_player([]),
+		    Profile1 = Profile#{auth=>true, userId=>UserId, playerPid=>Player_pid},
+		    error_logger:info_msg("Enter game loop, User id: ~p, Player pid: ~p~n", [UserId, Player_pid]),
 		    game_loop(Socket, Transport, Profile1);
 		{error, Reason} ->
 		    error_logger:info_msg("auth fail~n",[]),

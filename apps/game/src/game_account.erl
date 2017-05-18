@@ -7,9 +7,10 @@
 -behaviour(gen_server).
 
 -export([start_link/0,
-         login/2,
+         login/4,
          logout/1,
-         add/1]).
+         add/1,
+         send_msg/2]).
 
 %% gen_server callbacks
 -export([init/1,
@@ -27,15 +28,17 @@ start_link() ->
 add(User) ->
     gen_server:call(?MODULE, {add, User}).
 
-login(User, Password) ->
-    gen_server:call(?MODULE, {login, User, Password}).
+login(User, Password, Socket, Transfer) ->
+    gen_server:call(?MODULE, {login, User, Password, Socket, Transfer}).
 
 logout(User) ->
     gen_server:call(?MODULE, {logout, User}).
 
+send_msg(UserId, Msg) ->
+    gen_server:call(?MODULE, {send_msg, UserId, Msg}).
+
 init([]) ->
-    Users = dict:store("abcd","abcd",dict:new()),
-    {ok, #state{users=Users}}.
+    {ok, #state{users=dict:new()}}.
 
 handle_call({add, User}, _From, State=#state{users=Users}) ->
     io:format("Add user: ~p~n", [User]),
@@ -44,20 +47,25 @@ handle_call({add, User}, _From, State=#state{users=Users}) ->
 %%
 %% @return {ok, UserId} | {error, Reason}
 %%
-handle_call({login, User, Password}, _From, State=#state{users=Users}) ->
+handle_call({login, User, Password, Socket, Transfer}, _From, State=#state{users=Users}) ->
     Conn = open(),
     {ok, _, Res} = epgsql:equery(Conn, "select * from users where username=$1 and password=$2", [ User, Password]),
     close(Conn),
-    io:format("DB:~p~n", [Res]),
+    error_logger:info_msg("DB access: ~p~n", [Res]),
     case Res of 
         [{ID, _, _}] -> 
-            {reply, {ok, ID}, State};
+            U = dict:store(ID, {Socket, Transfer}, Users),
+            {reply, {ok, ID}, #state{users = U}};
         [] -> 
             {reply, {error, "not found"}, State}
     end;
 
 handle_call({logout, User}, _From, State) ->
     io:format("Logout~n", []),
+    {reply, ignored, State};
+
+handle_call({send_msg, UserId, Msg}, _From, State=#state{users=Users}) ->
+    {Socket, Transfer} = dict:get(UserId, Users),
     {reply, ignored, State}.
 
 handle_cast(_Msg, State) ->

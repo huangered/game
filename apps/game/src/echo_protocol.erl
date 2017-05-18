@@ -17,7 +17,7 @@ loop(Socket, Transport, Profile) ->
     io:format("Socket ~p, Profile ~p~n",[Socket, Profile]),
     case receive_line(Socket, Transport) of
 	{ok, Method, DataMap} ->
-	    case auth(Method, DataMap) of
+	    case auth(Method, DataMap, Socket, Transport) of
 		{ok, UserId} -> 
 		    error_logger:info_msg("Auth success, User id ~p~n",[UserId]),
             Player_pid = game_player_sup:new_player([]),
@@ -38,25 +38,30 @@ loop(Socket, Transport, Profile) ->
 game_loop(Socket, Transport, Profile) ->
     case receive_line(Socket, Transport) of
     {ok, heartbeat, _} ->
-        io:format("Hearbeat", []);
+        io:format("Hearbeat", []),
+        game_loop(Socket, Transport, Profile);
 	{ok, Method, DataMap} ->
-	    io:format("send echo~n",[]),
-	    Transport:send(Socket, "echo~n");
+        UserId = maps:get(userId, Profile),
+        Pid = maps:get(playerPid, Profile),
+	    io:format("Send request to player pid ~p~n",[Pid]),
+        game_player:action(Pid, UserId, Method, DataMap),
+        game_loop(Socket, Transport, Profile);
 	{error} ->
-	    Transport:close(Socket)
-	    %%io:format("error",[])
-    end,
-    game_loop(Socket, Transport, Profile).
+        UserId = maps:get(userId, Profile),
+        error_logger:warning_msg("logout~n", []),
+	    Transport:close(Socket),
+        game_account:logout(UserId)
+    end.
 
 %% auth
-auth(Method, DataMap) ->
+auth(Method, DataMap, Socket, Transport) ->
     case Method of
 	auth ->
 	    User = maps:get( "user", DataMap),
 	    Password = maps:get( "password", DataMap ),
-	    game_account:login(User, Password);
+	    game_account:login(User, Password, Socket, Transport);
 	_ ->
-	    io:format("Method ~p not support now~n", [Method]),
+	    error_logger:warning_msg("Method ~p not support now~n", [Method]),
 	    {error, "Method not support"}
     end.
 
@@ -69,9 +74,8 @@ receive_line(Socket, Transport) ->
 	    io:format("Recv len ~p~n", [Len]),
 	    case Transport:recv(Socket, Len, infinity) of
 		{ok, Data}->
-		    io:format("Recv dat ~p~n", [binary_to_list(Data)]),
-		    {M, D} = unpack(Data),
-		    {Method, DataMap} = unpack_raw(M, D),
+		    {M, D} = game_package:unpack(Data),
+		    {Method, DataMap} = game_package:unpack_raw(M, D),
 		    io:format("Method ~p, Data ~p~n",[Method, DataMap]),
 		    {ok, Method, DataMap};
 		_ ->
@@ -83,29 +87,5 @@ receive_line(Socket, Transport) ->
 	    {error}
     end.
 
-helper1({K1, K2}) ->
-    case is_binary(K2) of
-	true -> {binary_to_list(K1), binary_to_list(K2)};
-	false -> {binary_to_list(K1), K2}
-    end.
- 	    
-change(M) ->
-    DataList = maps:to_list(M),
-    io:format("Debug:~p~n", [DataList]),
-    ChangeList = lists:map(fun helper1/1, DataList),
-    maps:from_list(ChangeList).
 
-unpack_raw(Method, Data) ->
-    M = list_to_atom(binary_to_list(Method)),
-    Json = jiffy:decode(Data, [return_maps]),
-    {M, change(Json)}.    
 
-%% pack & unpack
-pack(Method, Data) ->
-  MethodLen = length(binary_to_list(Method)),
-  <<MethodLen:8, Method/binary, Data/binary>>.
-
-unpack(RawData) ->
-  <<MethodLen:8, Bin/binary>> = RawData,
-  <<Method:MethodLen/binary, Data/binary>> = Bin,
-  {Method, Data}.

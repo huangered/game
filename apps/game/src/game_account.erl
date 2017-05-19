@@ -10,7 +10,7 @@
          login/4,
          logout/1,
          add/1,
-         send_msg/2]).
+         send_msg/3]).
 
 %% gen_server callbacks
 -export([init/1,
@@ -66,7 +66,7 @@ handle_call({logout, User}, _From, State) ->
 
 handle_call({send_msg, SenderId, UserId, Msg}, _From, State=#state{users=Users}) ->
     {Socket, Transfer} = dict:get(UserId, Users),
-    Transfer:send(Soket, Msg),
+    Transfer:send(Socket, Msg),
     {reply, ignored, State}.
 
 handle_cast(_Msg, State) ->

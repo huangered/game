@@ -11,7 +11,8 @@
          logout/1,
          add/1,
          send_msg/3,
-         show/0]).
+         show/0,
+         create_player/0]).
 
 %% gen_server callbacks
 -export([init/1,
@@ -41,6 +42,9 @@ send_msg(SenderId, UserId, Msg) ->
 show() ->
     gen_server:call(?MODULE, {show}).
 
+create_player() ->
+    gen_server:call(?MODULE, {create_player}).
+
 init([]) ->
     {ok, #state{users=dict:new()}}.
 
@@ -52,9 +56,9 @@ handle_call({add, User}, _From, State=#state{users=Users}) ->
 %% @return {ok, UserId} | {error, Reason}
 %%
 handle_call({login, User, Password, Socket, Transfer}, _From, State=#state{users=Users}) ->
-    Conn = open(),
-    {ok, _, Res} = epgsql:equery(Conn, "select * from users where username=$1 and password=$2", [ User, Password]),
-    close(Conn),
+    Conn = game_db:open(),
+    Res = game_db:select_user(Conn, User, Password),
+    game_db:close(Conn),
     error_logger:info_msg("DB access: ~p~n", [Res]),
     case Res of 
         [{ID, _, _}] -> 
@@ -70,12 +74,17 @@ handle_call({logout, UserId}, _From, State=#state{users=Users}) ->
     {reply, ok, #state{users=U}};
 
 handle_call({send_msg, SenderId, UserId, Msg}, _From, State=#state{users=Users}) ->
-    {Socket, Transfer} = dict:get(UserId, Users),
+    {ok, {Socket, Transfer}} = dict:find(UserId, Users),
+    error_logger:info_msg("Send msg: socket ~p, Transfer ~p~n", [Socket, Transfer]),
     Transfer:send(Socket, Msg),
     {reply, ignored, State};
 
 handle_call({show}, _From, State=#state{users=Users}) ->
     error_logger:info_msg("Show accounts: ~p~n", [Users]),
+    {reply, ok, State};
+
+handle_call({create_player}, _From, State) ->
+    error_logger:info_msg("Create player: ~n", []),
     {reply, ok, State}.
 
 handle_cast(_Msg, State) ->
@@ -91,16 +100,6 @@ code_change(_OldVsn, State, _Extra) ->
     {ok, State}.
 
 %% Internal functions
-open() ->
-    {ok, Conn}=epgsql:connect("localhost", "huangered", "",
-                              [
-                               { database,"huangered",
-                                 timeout, 5000
-                               }]),
-    Conn.
-
-close(Conn) ->
-   ok = epgsql:close(Conn).
 
 %% new player pid
 new_player() ->

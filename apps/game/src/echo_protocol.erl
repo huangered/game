@@ -36,18 +36,20 @@ loop(Socket, Transport, Profile) ->
 %% game_loop
 %% 
 game_loop(Socket, Transport, Profile) ->
+    UserId = maps:get(userId, Profile),
     case receive_line(Socket, Transport) of
     {ok, heartbeat, _} ->
         io:format("Hearbeat", []),
         game_loop(Socket, Transport, Profile);
+    {ok, logout, _} ->
+        game_account:logout(UserId),
+        Transport:close(Socket);    
 	{ok, Method, DataMap} ->
-        UserId = maps:get(userId, Profile),
         Pid = maps:get(playerPid, Profile),
 	    io:format("Send request to player pid ~p~n",[Pid]),
         game_player:action(Pid, UserId, Method, DataMap),
         game_loop(Socket, Transport, Profile);
 	{error} ->
-        UserId = maps:get(userId, Profile),
         error_logger:warning_msg("logout~n", []),
 	    Transport:close(Socket),
         game_account:logout(UserId)

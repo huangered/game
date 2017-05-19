@@ -10,7 +10,8 @@
          login/4,
          logout/1,
          add/1,
-         send_msg/3]).
+         send_msg/3,
+         show/0]).
 
 %% gen_server callbacks
 -export([init/1,
@@ -31,11 +32,14 @@ add(User) ->
 login(User, Password, Socket, Transfer) ->
     gen_server:call(?MODULE, {login, User, Password, Socket, Transfer}).
 
-logout(User) ->
-    gen_server:call(?MODULE, {logout, User}).
+logout(UserId) ->
+    gen_server:call(?MODULE, {logout, UserId}).
 
 send_msg(SenderId, UserId, Msg) ->
     gen_server:call(?MODULE, {send_msg, SenderId, UserId, Msg}).
+
+show() ->
+    gen_server:call(?MODULE, {show}).
 
 init([]) ->
     {ok, #state{users=dict:new()}}.
@@ -60,14 +64,19 @@ handle_call({login, User, Password, Socket, Transfer}, _From, State=#state{users
             {reply, {error, "not found"}, State}
     end;
 
-handle_call({logout, User}, _From, State) ->
-    io:format("Logout~n", []),
-    {reply, ignored, State};
+handle_call({logout, UserId}, _From, State=#state{users=Users}) ->
+    io:format("Logout user id: ~p~n", [UserId]),
+    U = dict:erase(UserId, Users),
+    {reply, ok, #state{users=U}};
 
 handle_call({send_msg, SenderId, UserId, Msg}, _From, State=#state{users=Users}) ->
     {Socket, Transfer} = dict:get(UserId, Users),
     Transfer:send(Socket, Msg),
-    {reply, ignored, State}.
+    {reply, ignored, State};
+
+handle_call({show}, _From, State=#state{users=Users}) ->
+    error_logger:info_msg("Show accounts: ~p~n", [Users]),
+    {reply, ok, State}.
 
 handle_cast(_Msg, State) ->
     {noreply, State}.

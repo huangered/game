@@ -34,8 +34,8 @@ login(User, Password, Socket, Transfer) ->
 logout(User) ->
     gen_server:call(?MODULE, {logout, User}).
 
-send_msg(UserId, Msg) ->
-    gen_server:call(?MODULE, {send_msg, UserId, Msg}).
+send_msg(SenderId, UserId, Msg) ->
+    gen_server:call(?MODULE, {send_msg, SenderId, UserId, Msg}).
 
 init([]) ->
     {ok, #state{users=dict:new()}}.
@@ -64,8 +64,9 @@ handle_call({logout, User}, _From, State) ->
     io:format("Logout~n", []),
     {reply, ignored, State};
 
-handle_call({send_msg, UserId, Msg}, _From, State=#state{users=Users}) ->
+handle_call({send_msg, SenderId, UserId, Msg}, _From, State=#state{users=Users}) ->
     {Socket, Transfer} = dict:get(UserId, Users),
+    Transfer:send(Soket, Msg),
     {reply, ignored, State}.
 
 handle_cast(_Msg, State) ->

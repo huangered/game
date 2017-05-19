@@ -70,7 +70,8 @@ handle_call({logout, UserId}, _From, State=#state{users=Users}) ->
     {reply, ok, #state{users=U}};
 
 handle_call({send_msg, SenderId, UserId, Msg}, _From, State=#state{users=Users}) ->
-    {Socket, Transfer} = dict:get(UserId, Users),
+    {ok, {Socket, Transfer}} = dict:find(UserId, Users),
+    error_logger:info_msg("Send msg: socket ~p, Transfer ~p~n", [Socket, Transfer]),
     Transfer:send(Socket, Msg),
     {reply, ignored, State};
 
@@ -92,7 +93,7 @@ code_change(_OldVsn, State, _Extra) ->
 
 %% Internal functions
 open() ->
-    {ok, Conn}=epgsql:connect("localhost", "huangered", "",
+    {ok, Conn}=epgsql:connect("localhost", "huangered", "1234",
                               [
                                { database,"huangered",
                                  timeout, 5000

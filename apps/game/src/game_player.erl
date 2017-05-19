@@ -32,11 +32,12 @@ init([]) ->
     {ok, #state{ players = dict:new() }}.
 
 handle_call({User, Action, Data}, _From, State) ->
-	case Action of
-		move -> io:format("move", []);
-		attack -> io:format("attack", []);
-		_ -> io:format("no support", [])
-	end,
+    case Action of
+        move -> io:format("move~n", []);
+        attack -> io:format("attack~n", []);
+        world -> io:format("world~n",[]);
+        _ -> io:format("no support", [])
+    end,
     {reply, ignored, State}.
 
 handle_cast(_Msg, State) ->

@@ -1,5 +1,6 @@
 -module(echo_protocol).
 -behaviour(ranch_protocol).
+-include("record.hrl").
 
 -export([start_link/4]).
 -export([init/4]).
@@ -10,6 +11,7 @@ start_link(Ref, Socket, Transport, Opts) ->
 
 init(Ref, Socket, Transport, _Opts = []) ->
     ok = ranch:accept_ack(Ref),
+    Sock = #sock{socket=Socket, transport=Transport},
     loop(Socket, Transport, #{}).
 
 %% loop
@@ -20,7 +22,7 @@ loop(Socket, Transport, Profile) ->
 	    case auth(Method, DataMap, Socket, Transport) of
 		{ok, UserId} -> 
 		    error_logger:info_msg("Auth success, User id ~p~n",[UserId]),
-            Player_pid = game_player_sup:new_player([]),
+		    Player_pid = game_player_sup:new_player([]),
 		    Profile1 = Profile#{auth=>true, userId=>UserId, playerPid=>Player_pid},
 		    error_logger:info_msg("Enter game loop, User id: ~p, Player pid: ~p~n", [UserId, Player_pid]),
 		    game_loop(Socket, Transport, Profile1);
@@ -38,21 +40,26 @@ loop(Socket, Transport, Profile) ->
 game_loop(Socket, Transport, Profile) ->
     UserId = maps:get(userId, Profile),
     case receive_line(Socket, Transport) of
-    {ok, heartbeat, _} ->
-        io:format("Hearbeat", []),
-        game_loop(Socket, Transport, Profile);
-    {ok, logout, _} ->
-        game_account:logout(UserId),
-        Transport:close(Socket);    
+	{ok, heartbeat, _} ->
+	    io:format("Hearbeat", []),
+	    game_loop(Socket, Transport, Profile);
+	{ok, logout, _} ->
+	    game_account:logout(UserId),
+	    Transport:close(Socket);    
+	{ok, talk, DataMap} ->
+	    TargetId = maps:get("userId", DataMap),
+	    Msg = maps:get("msg", DataMap),
+	    game_account:send_msg(UserId, TargetId, Msg),
+	    game_loop(Socket, Transport, Profile);
 	{ok, Method, DataMap} ->
-        Pid = maps:get(playerPid, Profile),
+	    Pid = maps:get(playerPid, Profile),
 	    io:format("Send request to player pid ~p~n",[Pid]),
-        game_player:action(Pid, UserId, Method, DataMap),
-        game_loop(Socket, Transport, Profile);
+	    game_player:action(Pid, UserId, Method, DataMap),
+	    game_loop(Socket, Transport, Profile);
 	{error} ->
-        error_logger:warning_msg("logout~n", []),
+	    error_logger:warning_msg("logout~n", []),
 	    Transport:close(Socket),
-        game_account:logout(UserId)
+	    game_account:logout(UserId)
     end.
 
 %% auth

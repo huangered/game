@@ -11,7 +11,8 @@
          logout/1,
          add/1,
          send_msg/3,
-         show/0]).
+         show/0,
+         create_player/0]).
 
 %% gen_server callbacks
 -export([init/1,
@@ -40,6 +41,9 @@ send_msg(SenderId, UserId, Msg) ->
 
 show() ->
     gen_server:call(?MODULE, {show}).
+
+create_player() ->
+    gen_server:call(?MODULE, {create_player}).
 
 init([]) ->
     {ok, #state{users=dict:new()}}.
@@ -77,6 +81,10 @@ handle_call({send_msg, SenderId, UserId, Msg}, _From, State=#state{users=Users})
 
 handle_call({show}, _From, State=#state{users=Users}) ->
     error_logger:info_msg("Show accounts: ~p~n", [Users]),
+    {reply, ok, State};
+
+handle_call({create_player}, _From, State) ->
+    error_logger:info_msg("Create player: ~n", []),
     {reply, ok, State}.
 
 handle_cast(_Msg, State) ->

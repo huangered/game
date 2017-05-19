@@ -85,9 +85,9 @@ receive_line(Socket, Transport) ->
 		{ok, Data}->
 		    {M, D} = game_package:unpack(Data),
 		    {Method, DataMap} = game_package:unpack_raw(M, D),
-		    io:format("Method ~p, Data ~p~n",[Method, DataMap]),
 		    {ok, Method, DataMap};
 		_ ->
+		    error_logger:error_msg("Close socket"),
 		    Transport:close(Socket),
 		    {error}
 	    end;

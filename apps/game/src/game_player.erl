@@ -7,6 +7,8 @@
 
 -behaviour(gen_server).
 
+-include("record.hrl").
+
 -export([start_link/0]).
 
 %% gen_server callbacks
@@ -19,7 +21,7 @@
 
 -export ([action/4]).
 
--record(state, {players}).
+-record(state, {player}).
 
 start_link() ->
     gen_server:start_link(?MODULE, [], []).
@@ -29,19 +31,27 @@ action(M, User, Action, Data) ->
 
 init([]) ->
     io:format("player init~n", []),
-    {ok, #state{ players = dict:new() }}.
+    P = #player{x=0,y=0,hp=0,mp=0},
+    {ok, #state{ player = P }}.
 
-handle_call({User, Action, Data}, _From, State) ->
+handle_call({User, Action, Data}, _From, State=#state{player=P}) ->
     case Action of
         move -> 
-            X=maps:get("x", Data),
-            Y=maps:get("y", Data),
-            io:format("move to location x:~p y:~p ~n", [X, Y]);
-        attack -> io:format("attack~n", []);
-        world -> io:format("world~n",[]);
-        _ -> io:format("no support", [])
+            X = maps:get("x", Data) + P#player.x,
+            Y = maps:get("y", Data) + P#player.y,
+            P2 = P#player{x=X, y=Y},
+        attack -> 
+            P2 = P,
+            io:format("attack~n", []);
+        world -> 
+            P2 = P,
+            io:format("world~n",[]);
+        _ ->
+            P2 = P,
+            io:format("no support", [])
     end,
-    {reply, ignored, State}.
+    error_logger:info_msg("Update player: ~p~n", [P2]),
+    {reply, ignored, #state{player = P2}}.
 
 handle_cast(_Msg, State) ->
     {noreply, State}.

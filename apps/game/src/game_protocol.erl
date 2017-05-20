@@ -1,4 +1,4 @@
--module(echo_protocol).
+-module(game_protocol).
 -behaviour(ranch_protocol).
 -include("record.hrl").
 
@@ -41,7 +41,7 @@ game_loop(Socket, Transport, Profile) ->
     UserId = maps:get(userId, Profile),
     case receive_line(Socket, Transport) of
 	{ok, heartbeat, _} ->
-	    io:format("Hearbeat", []),
+	    io:format("Hearbeat~n", []),
 	    game_loop(Socket, Transport, Profile);
 	{ok, logout, _} ->
 	    game_account:logout(UserId),

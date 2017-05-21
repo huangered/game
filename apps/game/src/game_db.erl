@@ -1,5 +1,8 @@
 -module(game_db).
--export([open/0, close/1, select_user/3]).
+-export([open/0, 
+         close/1,
+         select_user/3,
+         select_users/1]).
 
 open() ->
     {ok, Conn}=epgsql:connect("localhost", "huangered", "",
@@ -14,6 +17,9 @@ close(Conn) ->
 
 select_user(Conn, User, Password) ->
     {ok, _, Res} = epgsql:equery(Conn, "select * from users where username=$1 and password=$2", [ User, Password]),
+    Res.
+select_users(Conn) ->
+    {ok, _, Res} = epgsql:equery(Conn, "select id, username from users", []),
     Res.
 
 save_msg(Conn, UserId, TargetId, Msg) ->

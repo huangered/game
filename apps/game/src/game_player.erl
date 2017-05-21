@@ -39,7 +39,7 @@ handle_call({User, Action, Data}, _From, State=#state{player=P}) ->
         move -> 
             X = maps:get("x", Data) + P#player.x,
             Y = maps:get("y", Data) + P#player.y,
-            P2 = P#player{x=X, y=Y},
+            P2 = P#player{x=X, y=Y};
         attack -> 
             P2 = P,
             io:format("attack~n", []);
@@ -48,7 +48,7 @@ handle_call({User, Action, Data}, _From, State=#state{player=P}) ->
             io:format("world~n",[]);
         _ ->
             P2 = P,
-            io:format("no support", [])
+            io:format("no support~p~n", [Action])
     end,
     error_logger:info_msg("Update player: ~p~n", [P2]),
     {reply, ignored, #state{player = P2}}.

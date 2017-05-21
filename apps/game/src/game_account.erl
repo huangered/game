@@ -11,7 +11,7 @@
          logout/1,
          add/1,
          send_msg/3,
-         show/0,
+         show/1,
          create_player/0]).
 
 %% gen_server callbacks
@@ -39,8 +39,11 @@ logout(UserId) ->
 send_msg(SenderId, UserId, Msg) ->
     gen_server:call(?MODULE, {send_msg, SenderId, UserId, Msg}).
 
-show() ->
-    gen_server:call(?MODULE, {show}).
+%%
+%% @return {ok, users} 
+%%
+show(UserId) ->
+    gen_server:call(?MODULE, {show, UserId}).
 
 create_player() ->
     gen_server:call(?MODULE, {create_player}).
@@ -79,8 +82,17 @@ handle_call({send_msg, SenderId, UserId, Msg}, _From, State=#state{users=Users})
     Transfer:send(Socket, Msg),
     {reply, ignored, State};
 
-handle_call({show}, _From, State=#state{users=Users}) ->
-    error_logger:info_msg("Show accounts: ~p~n", [Users]),
+handle_call({show, UserId}, _From, State=#state{users=Users}) ->
+    {ok, {Socket, Transfer}} = dict:find(UserId, Users),
+    Conn = game_db:open(),
+    Users1 = game_db:select_users(Conn),
+    game_db:close(Conn),
+    error_logger:info_msg("Show accounts in db: ~p~n", [Users1]),
+    Data = lists:foldl(fun game_package:parse_user/2, [], Users1),
+    Json = jiffy:encode(Data),
+    Bin = game_package:pack(<<"show">>, Json),
+    MsgPack = game_package:msg_pack(Bin),
+    Transfer:send(Socket, MsgPack),
     {reply, ok, State};
 
 handle_call({create_player}, _From, State) ->

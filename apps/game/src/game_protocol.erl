@@ -51,6 +51,9 @@ game_loop(Socket, Transport, Profile) ->
 	    Msg = maps:get("msg", DataMap),
 	    game_account:send_msg(UserId, TargetId, Msg),
 	    game_loop(Socket, Transport, Profile);
+	{ok, show, _} ->
+		game_account:show(UserId),
+		game_loop(Socket, Transport, Profile);
 	{ok, Method, DataMap} ->
 	    Pid = maps:get(playerPid, Profile),
 	    io:format("Send request to player pid ~p~n",[Pid]),

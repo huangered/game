@@ -46,6 +46,14 @@ handle_call({User, Action, Data}, _From, State=#state{player=P}) ->
         world -> 
             P2 = P,
             io:format("world~n",[]);
+        hp ->
+            Hp = maps:get("hp", Data) + P#player.hp,
+            P2 = P#player{hp = Hp},
+            io:format("hp~n", []);
+        mp ->
+            Mp = maps:get("mp", Data) + P#player.mp,
+            P2 = P#player{mp = Mp},
+            io:format("mp~n", []);
         _ ->
             P2 = P,
             io:format("no support~p~n", [Action])

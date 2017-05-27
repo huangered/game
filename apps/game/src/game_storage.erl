@@ -41,6 +41,7 @@ remove_user_detail(UserId) ->
 %% private method
 
 init([]) ->
+    error_logger:info_msg("Storage init.", []),
 	UserTable = ets:new(user_detail_db, [named_table, {keypos, #user_detail.user_id}]),	
     {ok, #state{}}.
 
@@ -51,7 +52,10 @@ handle_call({insert, UserId, PlayerId, WorldId, PlayerProc, WorldProc}, _From, S
 
 handle_call({lookup, UserId}, _From, State) ->
 	Data = ets:lookup(user_detail_db, UserId),
-	{reply, {ok, Data}, State};
+	case Data of
+		[V] -> {reply, {ok, V}, State};
+		[] -> {reply, ignore, State}
+	end;
 
 handle_call({remove, UserId}, _From, State) ->
 	ets:delete(user_detail_db, UserId),

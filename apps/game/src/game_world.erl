@@ -9,6 +9,8 @@
 
 -export([start_link/0]).
 
+-export([list/0]).
+
 %% gen_server callbacks
 -export([init/1,
          handle_call/3,
@@ -22,9 +24,16 @@
 start_link() ->
     gen_server:start_link(?MODULE, [], []).
 
+list() ->
+    gen_server:call(?MODULE, {list}).
+
 init([]) ->
     io:format("world init~n", []),
     {ok, #state{ players = dict:new() }}.
+
+handle_call({list}, _From, State) ->
+    io:format("list worl",[]),
+    {reply, ignored, State};
 
 handle_call(_Request, _From, State) ->
 	{reply, ignored, State}.

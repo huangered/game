@@ -54,6 +54,13 @@ game_loop(Socket, Transport, Profile) ->
 	{ok, show, _} ->
 		game_account:show(UserId),
 		game_loop(Socket, Transport, Profile);
+	{ok, list_player, DataMap} ->
+		game_account:list_player(UserId),
+		game_loop(Socket, Transport, Profile);
+	{ok, enter_in_game, DataMap} ->
+		PlayerId = maps:get("playerId", DataMap),
+		game_account:enter_in_game(PlayerId),
+		game_loop(Socket, Transport, Profile);
 	{ok, Method, DataMap} ->
 	    Pid = maps:get(playerPid, Profile),
 	    io:format("Send request to player pid ~p~n",[Pid]),
@@ -83,20 +90,21 @@ auth(Method, DataMap, Socket, Transport) ->
 receive_line(Socket, Transport) ->
     case Transport:recv(Socket, 2, infinity) of
         {ok, <<Len:16>>} ->
-	    io:format("Recv len ~p~n", [Len]),
-	    case Transport:recv(Socket, Len, infinity) of
-		{ok, Data}->
-		    {M, D} = game_package:unpack(Data),
-		    {Method, DataMap} = game_package:unpack_raw(M, D),
-		    {ok, Method, DataMap};
+        	Timeout = 5000,
+	    	io:format("Recv len ~p, set timeout ~p~n", [Len, Timeout]),
+	    	case Transport:recv(Socket, Len, Timeout) of
+				{ok, Data}->
+		    		{M, D} = game_package:unpack(Data),
+		    		{Method, DataMap} = game_package:unpack_raw(M, D),
+		    		{ok, Method, DataMap};
+				_ ->
+		    		error_logger:error_msg("Close socket"),
+		    		Transport:close(Socket),
+		    		{error}
+	    	end;
 		_ ->
-		    error_logger:error_msg("Close socket"),
-		    Transport:close(Socket),
-		    {error}
-	    end;
-	_ ->
-	    Transport:close(Socket),
-	    {error}
+	    	Transport:close(Socket),
+	    	{error}
     end.
 
 

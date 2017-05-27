@@ -12,7 +12,12 @@
          add/1,
          send_msg/3,
          show/1,
-         create_player/0]).
+         list_player/1,
+         select_player/0,
+         add_player/0,
+         del_player/0,
+         enter_in_game/1,
+         enter_out_game/0]).
 
 %% gen_server callbacks
 -export([init/1,
@@ -38,6 +43,19 @@ logout(UserId) ->
 
 send_msg(SenderId, UserId, Msg) ->
     gen_server:call(?MODULE, {send_msg, SenderId, UserId, Msg}).
+
+list_player(UserId) ->
+    gen_server:call(?MODULE, {list_player, UserId}).
+select_player() ->    
+    ok.
+add_player() ->
+    ok.
+del_player() ->
+    ok.
+enter_in_game(PlayerId) ->
+    gen_server:call(?MODULE, {enter_in_game, PlayerId}).
+enter_out_game() ->
+    ok.
 
 %%
 %% @return {ok, users} 
@@ -95,8 +113,29 @@ handle_call({show, UserId}, _From, State=#state{users=Users}) ->
     Transfer:send(Socket, MsgPack),
     {reply, ok, State};
 
+handle_call({list_player, UserId}, _From, State=#state{users=Users}) ->
+    {ok, {Socket, Transfer}} = dict:find(UserId, Users),
+    Conn = game_db:open(),
+    Players = game_db:list_player(Conn, UserId),
+    game_db:close(Conn),
+    io:format("list user: ~p~n", [Players]),
+    Data = lists:foldl(fun game_package:parse_player/2, [], Players),
+    Bin = game_package:pack(<<"list_player_resp">>, jiffy:encode(Data)),
+    MsgPack = game_package:msg_pack(Bin),
+    Transfer:send(Socket, MsgPack),
+    {reply, ok, State};
+
 handle_call({create_player}, _From, State) ->
     error_logger:info_msg("Create player: ~n", []),
+    {reply, ok, State};
+
+handle_call({enter_in_game, PlayerId}, _From, State) ->
+    error_logger:info_msg("Player ~p enter in game.~n", [PlayerId]),
+    Pid = game_player_sup:new_player([]),
+    io:format("Player pid:~p~n", [Pid]),
+    {reply, ok, State};
+handle_call({enter_out_game, PlayerId}, _From, State) ->
+    error_logger:info_msg("Player ~p enter out game.~n", [PlayerId]),
     {reply, ok, State}.
 
 handle_cast(_Msg, State) ->

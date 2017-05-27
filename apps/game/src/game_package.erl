@@ -1,6 +1,11 @@
 -module(game_package).
 
--export([pack/2, unpack/1, unpack_raw/2, parse_user/2, msg_pack/1]).
+-export([pack/2, 
+         unpack/1,
+         unpack_raw/2,
+         parse_user/2,
+         msg_pack/1,
+         parse_player/2]).
 
 helper({K1, K2}) ->
     case is_binary(K2) of
@@ -12,6 +17,11 @@ parse_user(X, N_list) ->
     {Id, Name} = X,
     D = #{id => Id, username => Name},
     N_list ++  [ D ].
+
+parse_player(X, N_list) ->
+    {Id, User_id, Name} = X,
+    D = #{id => Id, user_id=>User_id, name=>Name},
+    N_list ++ [D].
  	    
 change(M) ->
     DataList = maps:to_list(M),

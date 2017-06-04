@@ -3,6 +3,7 @@ import socket
 import struct
 import json
 def send(s, message):
+	print "send: %s\n" % (message)
 	length = len(message)
         # network (= big-endian)
 	lenBin = struct.pack("!H", length)

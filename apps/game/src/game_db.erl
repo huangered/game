@@ -6,7 +6,7 @@
          list_player/2]).
 
 open() ->
-    {ok, Conn}=epgsql:connect("localhost", "huangered", "",
+    {ok, Conn}=epgsql:connect("localhost", "huangered", "1234",
                               [
                                { database,"huangered",
                                  timeout, 5000

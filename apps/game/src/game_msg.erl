@@ -9,7 +9,9 @@
 
 -export([start_link/0]).
 
--export([get_msg/1, save_msg/3]).
+-export([send_package/3,
+         get_msg/1,
+         save_msg/3]).
 
 %% gen_server callbacks
 -export([init/1,
@@ -23,6 +25,9 @@
 
 start_link() ->
     gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
+
+send_package(UserId, Method, Data) ->
+    gen_server:call(?MODULE, {send_package, UserId, Method, Data}).
 
 get_msg(UserId) ->
     gen_server:call(?MODULE, {get_msg, UserId}).

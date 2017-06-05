@@ -17,6 +17,7 @@
 		 remove_user_detail/1,
 		 lookup_user_detail_player_process_id/1,
 		 register_socket/3,
+		 deregister_socket/1,
 		 query_socket/1]).
 
 %% gen_server callbacks
@@ -46,6 +47,9 @@ lookup_user_detail_player_process_id(UserId) ->
 
 register_socket(UserId, Socket, Transfer) ->
 	gen_server:call(?MODULE, {register_socket, UserId, Socket, Transfer}).
+
+deregister_socket(UserId) ->
+	gen_server:call(?MODULE, {deregister_socket, UserId}).
 
 query_socket(UserId) ->
 	gen_server:call(?MODULE, {query_socket, UserId}).
@@ -86,6 +90,10 @@ handle_call({remove, UserId}, _From, State) ->
 
 handle_call({register_socket, UserId, Socket, Transfer}, _From, State) ->
 	ets:insert(user_socket_db, #user_socket{user_id=UserId, socket=Socket, transfer=Transfer}),
+	{reply, ok, State};
+
+handle_call({deregister_socket, UserId}, _From, State) ->
+	ets:delete(user_socket_db, UserId),
 	{reply, ok, State};
 
 handle_call({query_socket, UserId}, _From, State) ->

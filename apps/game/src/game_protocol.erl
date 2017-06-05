@@ -18,18 +18,18 @@ init(Ref, Socket, Transport, _Opts = []) ->
 %% 
 loop(Socket, Transport, UserId)	->
     io:format("Protocol socket: ~p with UserId: ~p~n", [Socket, UserId]),
-    case receive_line(Socket, Transport) of
+    case receive_line(Socket, Transport, UserId) of
 	{ok, Method, DataMap} ->
 	    game_handle:dispatch(Socket, Transport, Method, DataMap, UserId);
 	{error, Reason} ->
-	    error_logger:warning_msg("Receive line error, reason~p~n", [Reason]),
+	    error_logger:warning_msg("Receive line error, reason: ~p~n", [Reason]),
 	    Transport:close(Socket),
 	    game_account:logout(UserId)
     end.
 %%
 %% receive line
 %%
-receive_line(Socket, Transport) ->
+receive_line(Socket, Transport, UserId) ->
     case Transport:recv(Socket, 2, infinity) of
         {ok, <<Len:16>>} ->
 	    Timeout = 5000,
@@ -39,16 +39,18 @@ receive_line(Socket, Transport) ->
 		    {M, D} = game_package:unpack(Data),
 		    {Method, DataMap} = game_package:unpack_raw(M, D),
 		    {ok, Method, DataMap};
-		_ ->
+		{error, Reason} ->
 		    error_logger:error_msg("Close socket"),
-		    game_storeage:remove_user_detail(Socket),
+		    game_storeage:remove_user_detail(UserId),
+		    game_storage:deregister_socket(UserId),
 		    Transport:close(Socket),
-		    {error, noreason}
+		    {error, Reason}
 	    end;
-	_ ->
-	    game_storage:remove_user_detail(Socket),
+	{error, Reason} ->
+	    game_storage:remove_user_detail(UserId),
+	    game_storage:deregister_socket(UserId),
 	    Transport:close(Socket),
-	    {error, noreason}
+	    {error, Reason}
     end.
 
 

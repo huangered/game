@@ -22,7 +22,7 @@ def recv(s):
 	leng2 = struct.unpack("B", data)[0]
 	data = s.recv(leng2)
 	data2 = s.recv(leng1 - 1)
-	print "len %d, len %d, method %s\nmsg\n==\n %s\n==\n" % (leng1, leng2, data, data2)
+	print "Total len: %d, method len: %d\n method: %s\nmsg:\n============\n %s\n============\n" % (leng1, leng2, data, data2)
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.connect(("localhost", 5555))

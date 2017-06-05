@@ -1,21 +1,36 @@
-game
-=====
+# Game
+An OTP game application
+## Environment
+* MacOS 10.12.5
 
-An OTP application
+## Prepare
+1. Install postgresql
+2. Install erlang/OPT
+3. Install rebar3
 
-Build
------
-
+##Build
+~~~bash
     $ rebar3 compile
+~~~
 
+## DB configure
+~~~
+ db.sql
+~~~
+##Player
 
-Player
------
 hp, mp, x, y.
 
-Action
------
-auth
-logout
-move
-attack
+##Action
+|Method			|Data|
+|:--------------	|:-----|
+|auth				|{"user":"","password":""}|
+|show				|{}|
+|list_player		|{}|
+|enter\_in_game	|{"playerId":0}|
+|enter\_out_game	|{"playerId":0}|
+|move				|{"x":0,"y":0}|
+|worlds			|{}|
+|friends			|{}|
+|talk				|{"userId":0,"msg":""}|
+|logout			|{}|

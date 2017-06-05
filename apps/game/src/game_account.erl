@@ -97,7 +97,7 @@ handle_call({logout, UserId}, _From, State=#state{users=Users}) ->
 handle_call({send_msg, SenderId, UserId, Msg}, _From, State=#state{users=Users}) ->
     {ok, Socket, Transfer} = game_storage:query_socket(UserId),
     error_logger:info_msg("Send msg: socket ~p, Transfer ~p~n", [Socket, Transfer]),
-    Transfer:send(Socket, Msg),
+    game_handle:talkResp(Socket, Transfer, erlang:list_to_binary(Msg)),
     {reply, ignored, State};
 
 handle_call({show, UserId}, _From, State=#state{users=Users}) ->

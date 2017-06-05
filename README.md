@@ -8,7 +8,7 @@ An OTP game application
 2. Install erlang/OPT
 3. Install rebar3
 
-##Build
+## Build
 ~~~bash
     $ rebar3 compile
 ~~~
@@ -17,20 +17,22 @@ An OTP game application
 ~~~
  db.sql
 ~~~
-##Player
+## Player
 
 hp, mp, x, y.
 
-##Action
-|Method			|Data|
-|:--------------	|:-----|
-|auth				|{"user":"","password":""}|
-|show				|{}|
-|list_player		|{}|
-|enter\_in_game	|{"playerId":0}|
-|enter\_out_game	|{"playerId":0}|
-|move				|{"x":0,"y":0}|
-|worlds			|{}|
-|friends			|{}|
-|talk				|{"userId":0,"msg":""}|
-|logout			|{}|
+## Action
+|Request Method	|Request Data|Response Header|Response|Feature|
+|:--------------	|:-----|:-----|:-----|:-----|
+|auth				|{"user":"","password":""}|AuthResp|ok \| error |auth user|
+|show				|{}|ShowResp|[{"username":"","id":0}]|list user|
+|list_player		|{}|ListPlayerResp|[{"id":0,"name":""}]|list user's player|
+|enter\_in_game	|{"playerId":0}|EnterInGameResp|ok \| error|enter in game|
+|enter\_out_game	|{"playerId":0}|EnterOutGameResp|ok \| error|enter out game|
+|move				|{"x":0,"y":0}|MoveResp|{"x":0,"y":0}|move player|
+|worlds			|{}|WorldsResp|[world list]|list worlds|
+|friends			|{}|FriendsResp|[friends list]|list friends|
+|talk				|{"userId":0,"msg":""}|TalkResp|ok \| error|talk|
+|logout			|{}|LogoutResp|ok \| error|logout|
+
+## Question

@@ -1,12 +1,14 @@
 -module(game_handle).
 
--export([dispatch/5]).
+-export([dispatch/5,
+		 talkResp/3]).
 
 dispatch(Socket, Transport, Method, DataMap, UserId) ->
     case Method of
 	auth ->
 	    {ok, ID} = auth(DataMap),
 	    game_storage:register_socket(ID, Socket, Transport),
+	    authResp(Socket, Transport, <<"ok">>),
 	    game_protocol:loop(Socket, Transport, ID);
 	heartbeat ->
 	    io:format("Hearbeat~n", []),
@@ -52,3 +54,14 @@ auth(DataMap) ->
 			io:format("Login fail, reason: ~p~n", [Msg]),
 			{error, "login fail"}
 	end.
+%% auth response
+authResp(S, T, Msg) ->	
+    Bin = game_package:pack(<<"AuthResp">>, Msg),
+    MsgPack = game_package:msg_pack(Bin),
+    T:send(S, MsgPack).
+
+%% talk response
+talkResp(S, T, Msg) ->	
+    Bin = game_package:pack(<<"TalkResp">>, Msg),
+    MsgPack = game_package:msg_pack(Bin),
+    T:send(S, MsgPack).

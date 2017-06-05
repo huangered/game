@@ -2,8 +2,10 @@
 import socket
 import struct
 import json
+from datetime import datetime
+
 def send(s, message):
-	print "send: %s\n" % (message)
+	print "send: %s" % (message)
 	length = len(message)
         # network (= big-endian)
 	lenBin = struct.pack("!H", length)
@@ -22,11 +24,12 @@ def recv(s):
 	leng2 = struct.unpack("B", data)[0]
 	data = s.recv(leng2)
 	data2 = s.recv(leng1 - 1)
-	print "Total len: %d, method len: %d\n method: %s\nmsg:\n============\n %s\n============\n" % (leng1, leng2, data, data2)
+	print "Datetime: %s\nTotal len: %d, method len: %d\nMethod: %s\nMsg:\n============\n%s\n============\n" % (str(datetime.now()), leng1, leng2, data, data2)
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.connect(("localhost", 5555))
 send(s, pack("auth",json.dumps({'user':'abcd', 'password':"abcd"})))
+recv(s),
 send(s, pack("show", json.dumps({})))
 recv(s)
 send(s, pack("list_player", json.dumps({})))
@@ -40,9 +43,9 @@ send(s, pack("talk", json.dumps({"userId":1, "msg":"hello world"})))
 send(s, pack("talk", json.dumps({"userId":1, "msg":"hello world"})))
 send(s, pack("talk", json.dumps({"userId":1, "msg":"hello world"})))
 send(s, pack("talk", json.dumps({"userId":1, "msg":"hello world"})))
-data = s.recv(1024)
-print data
+recv(s),
+recv(s),
+recv(s),
+recv(s),
 send(s, pack("logout", json.dumps({})))
-data = s.recv(1024)
-print data
 s.close()

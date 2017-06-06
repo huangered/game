@@ -26,6 +26,8 @@ hp, mp, x, y.
 |:--------------	|:-----|:-----|:-----|:-----|
 |auth				|{"user":"","password":""}|AuthResp|ok \| error |auth user|
 |show				|{}|ShowResp|[{"username":"","id":0}]|list user|
+|create_player	|{"name":""}|CreatePlayerResp|{"playerId":0}|create user's player|
+|delete_player	|{"playerId":""}|DeletePlayerResp|ok \| error|delete user's player|
 |list_player		|{}|ListPlayerResp|[{"id":0,"name":""}]|list user's player|
 |enter\_in_game	|{"playerId":0}|EnterInGameResp|ok \| error|enter in game|
 |enter\_out_game	|{"playerId":0}|EnterOutGameResp|ok \| error|enter out game|

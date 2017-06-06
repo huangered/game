@@ -4,48 +4,70 @@ import struct
 import json
 from datetime import datetime
 
-def send(s, message):
-	print "send: %s" % (message)
-	length = len(message)
+class GameClient:
+	def __init__(self):
+		self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		self.s.connect(("localhost", 5555))
+
+	def send(self, message):
+		print "send: %s" % (message)
+		length = len(message)
         # network (= big-endian)
-	lenBin = struct.pack("!H", length)
-	s.send(lenBin)
-	s.send(message)
+		lenBin = struct.pack("!H", length)
+		self.s.send(lenBin)
+		self.s.send(message)
 
-def pack(method, raw):
-        methodLen = len(method)
-        methodLenBin = struct.pack("B", methodLen)
-        data = methodLenBin+method+raw
-        return data
-def recv(s):
-	data = s.recv(2)
-	leng1 = struct.unpack("!H", data)[0]
-	data = s.recv(1)
-	leng2 = struct.unpack("B", data)[0]
-	data = s.recv(leng2)
-	data2 = s.recv(leng1 - 1)
-	print "Datetime: %s\nTotal len: %d, method len: %d\nMethod: %s\nMsg:\n============\n%s\n============\n" % (str(datetime.now()), leng1, leng2, data, data2)
+	def pack(self, method, raw):
+		methodLen = len(method)
+		methodLenBin = struct.pack("B", methodLen)
+		data = methodLenBin+method+raw
+		return data
 
-s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-s.connect(("localhost", 5555))
-send(s, pack("auth",json.dumps({'user':'abcd', 'password':"abcd"})))
-recv(s),
-send(s, pack("show", json.dumps({})))
-recv(s)
-send(s, pack("list_player", json.dumps({})))
-recv(s)
-send(s, pack("enter_in_game", json.dumps({'playerId':1})))
-send(s, pack("move",json.dumps({'x':100, 'y':2})))
-send(s, pack("move",json.dumps({'x':100, 'y':3})))
-send(s, pack("worlds",json.dumps({})))
-send(s, pack("friends", json.dumps({})))
-send(s, pack("talk", json.dumps({"userId":1, "msg":"hello world"})))
-send(s, pack("talk", json.dumps({"userId":1, "msg":"hello world"})))
-send(s, pack("talk", json.dumps({"userId":1, "msg":"hello world"})))
-send(s, pack("talk", json.dumps({"userId":1, "msg":"hello world"})))
-recv(s),
-recv(s),
-recv(s),
-recv(s),
-send(s, pack("logout", json.dumps({})))
-s.close()
+	def recv(self):
+		data = self.s.recv(2)
+		leng1 = struct.unpack("!H", data)[0]
+		data = self.s.recv(1)
+		leng2 = struct.unpack("B", data)[0]
+		data = self.s.recv(leng2)
+		data2 = self.s.recv(leng1 - 1)
+		print "Datetime: %s\nTotal len: %d, method len: %d\nMethod: %s\nMsg:\n============\n%s\n============\n" % (str(datetime.now()), leng1, leng2, data, data2)
+
+	def auth(self, user, password):
+		self.send(self.pack("auth",json.dumps({'user':user, 'password':password})))
+		self.recv()
+	def show(self):
+		self.send(self.pack("show", json.dumps({})))
+		self.recv()
+	def listPlayer(self):
+		self.send(self.pack("list_player", json.dumps({})))
+		self.recv()
+	def enterInGame(self, playerId):
+		self.send(self.pack("enter_in_game", json.dumps({'playerId':playerId})))
+	def move(self, x, y):
+		self.send(self.pack("move",json.dumps({'x':x, 'y':y})))
+	def worlds(self):
+		self.send(self.pack("worlds",json.dumps({})))
+	def friends(self):
+		self.send(self.pack("friends", json.dumps({})))
+	def talk(self, userId, msg):
+		self.send(self.pack("talk", json.dumps({"userId":1, "msg":"hello world"})))
+		self.recv(),
+	def logout(self):
+		self.send(self.pack("logout", json.dumps({})))
+	def close(self):
+		self.s.close()
+if __name__ == '__main__':
+	client = GameClient()
+	client.auth("abcd","abcd")
+	client.show()
+	client.listPlayer()
+	client.enterInGame(1)
+	client.move(100,2)
+	client.move(200,3)
+	client.worlds()
+	client.friends()
+	client.talk(1, "hell world!")
+	client.talk(1, "hell world!")
+	client.talk(1, "hell world!")
+	client.talk(1, "hell world!")
+	client.close()

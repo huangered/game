@@ -6,5 +6,5 @@
 
 -record(user, {id, username, password}).
 
--record(player, {x, y, hp, mp}).
+-record(player, {id, name, level, x, y, hp, mp}).
 

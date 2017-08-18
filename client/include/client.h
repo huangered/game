@@ -9,9 +9,9 @@ class Client {
  Client(std::string host, int port):_host(host),_port(port){
   }
 
-  int connect(){return 0;}
-  int send(char* data, int len){return 0;}
-  int receive(char* buf){return 0;}
+  int connect();
+  int send(char* data, int len);
+  int receive(char* buf);
   void print(){
     std::cout<<"print"<<std::endl;
   }
